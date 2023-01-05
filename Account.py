@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from IPython.core.display import display
+
 from Profiles import Investor
 import functools
 import itertools
@@ -7,11 +9,13 @@ import itertools
 
 class Account:
     def __init__(self):
-        self._table = pd.DataFrame(columns=['Date'
-                                          ,'Debit'
-                                          ,'Credit'
-                                          ,'Balance',
-                                           'Description'])
+        self._table = pd.DataFrame({
+            "Date": ""
+            , "Debit": 0.00
+            , "Credit": 0.00
+            , "Balance": 0.00
+            , "Description": ""
+        }, index=[0])
         self.tableLength = len(self._table.index)
         self._balance = 0.00
 
@@ -56,7 +60,6 @@ class Account:
         self._table.drop(index)
 
 
-
 class InvestorAccount(Account):
     def __init__(self, name, rate):
         self.investor = name
@@ -64,33 +67,52 @@ class InvestorAccount(Account):
         super().__init__()
 
 
+
+
 """
 All Transactions will be posted here
 This obj will action the transacton split
 """
+import DATA
+class Transactions:
+    @classmethod
+    def monthlyMortgage(cls, gl):
+        gl.postSplit(DATA.PAYMENT["Monthly"])
+    @classmethod
+    def monthlyPersonal(cls, account):
+
+
+
 class GeneralLedger(Account):
     def __init__(self):
         super().__init__()
         self.identity = "General Ledger Account for all Inventory"
         self.investors = []
 
-    def addInvestors(self,*args):
-        for name, rate in args:
-            investor = Investor(name, rate)
+    def addInvestors(self, *args):
+        for investor in args:
             self.investors.append(investor)
 
     def postEntry(self, entry):
         self.table = entry
 
+    # for the use to assign values to properties of table
+
     @classmethod
-    def split(cls, entry, rate):
-        amount = entry[1]
-        return amount * rate
+    def assignment(cls, obj, value):
+        obj.account.table = value
+        print(value)
 
     def postSplit(self, entry):
-        #modify the amount to match the split and give everyone their share
-        map(lambda inv : ()inv.account.table = [entry[0], self.split(entry, inv.account.ownership),entry[2]],self.investors)
+        # modify the amount to match the split and give everyone their share
+        split_amount = lambda amount, rate: amount * rate
 
+        result = list(map(lambda inv: GeneralLedger.assignment(inv,
+                                         [entry[0], split_amount(entry[1],
+                                          inv.account.ownership),
+                                          entry[2]]), self.investors))
+        return result
 
-
-
+    def displayInvestors(self):
+        InvestorTables = list(map(lambda i: display(i.account.table), self.investors))
+        return InvestorTables
