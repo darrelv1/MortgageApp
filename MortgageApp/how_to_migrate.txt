@@ -1,0 +1,5 @@
+
+  508  python3 manage.py startapp AccountApp
+  509  python manage.py makemigrations
+  510  python manage.py migrate
+  511  history > how_to_migrate.txt
