@@ -1,6 +1,6 @@
 
-import datetime as dt
-dynamicMonth = dt.Today("/d")
+from datetime import datetime as dt
+dynamicMonth = dt.today()
 
 PAYMENT = {
     "Mortgage": {
