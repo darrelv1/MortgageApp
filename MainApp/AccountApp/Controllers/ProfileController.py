@@ -12,9 +12,12 @@ def createProfile(name_entry, rate_entry):
     activeUsers.append(newUser)
     return result
 
+def LedgerBalance():
+    Ledger.options.filter()
+
 
 def loadProfile(name_query):
-
+    
     pass
 
 

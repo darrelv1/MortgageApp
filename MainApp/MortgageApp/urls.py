@@ -19,7 +19,7 @@ from django.http import HttpResponse
 from .views import home
 
 urlpatterns = [
-    path("", home),
     path("admin/", admin.site.urls),
-    path('', include('AccountApp.urls'))
+    path('account/', include('AccountApp.urls')),
+    path('', include('frontend.urls'))
 ]
