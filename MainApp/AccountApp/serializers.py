@@ -13,3 +13,8 @@ class CreateAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ledger
         fields = ('date', 'debit', 'description')
+
+class DeleteAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ledger
+        fields = ['id',]

@@ -13,11 +13,12 @@ def createProfile(name_entry, rate_entry):
     return result
 
 def LedgerBalance():
-    Ledger.options.filter()
+    pass
+
+    
 
 
 def loadProfile(name_query):
-    
     pass
 
 
