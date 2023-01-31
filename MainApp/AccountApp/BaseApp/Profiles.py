@@ -25,6 +25,7 @@ class Investor(Profile):
     def __init__(self, name, rate):
         super().__init__()
         self.name = name
+        self.rate = rate
         self.account = InvestorAccount(name, rate)
         self._balance = 0.00
 
@@ -32,20 +33,32 @@ class Investor(Profile):
     def balance(self):
         return self.account.balance
 
-    def showAccount(self):
-        display(self.account.table)
-
-class Personal(Profile):
-    def __init__(self, name):
+class UserInvestor(Profile):
+    def __init__(self, name, rate, account):
         super().__init__()
         self.name = name
-        #Barbering TrailBalance profit or loss
-        self.BarberAccount = Account()
-        #TD Credit Account
-        self.CreditAccount = Account()
-        #TD Chequing Account
-        self.DebitAccount = Account()
-        #investorAccount
-        self.affilatedInvestorProfile = Investor(name, 0.28)
+        self.rate = rate
+        self.account = account
+        self._balance = 0.00
+
+    @property
+    def balance(self):
+        return self.account.balance
+
+    # def showAccount(self):
+    #     display(self.account.table)
+
+# class Personal(Profile):
+#     def __init__(self, name):
+#         super().__init__()
+#         self.name = name
+#         #Barbering TrailBalance profit or loss
+#         self.BarberAccount = Account()
+#         #TD Credit Account
+#         self.CreditAccount = Account()
+#         #TD Chequing Account
+#         self.DebitAccount = Account()
+#         #investorAccount
+#         self.affilatedInvestorProfile = Investor(name, 0.28)
 
 

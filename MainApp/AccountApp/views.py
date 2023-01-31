@@ -3,9 +3,18 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from .Controllers import ProfileController
 
-from .models import Ledger
-from .serializers import AccountSerializer, CreateAccountSerializer, DeleteAccountSerializer
-
+from .models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
+#Custome Built Serializers
+from .serializers import (AccountSerializer
+                        ,CreateAccountSerializer
+                        ,DeleteAccountSerializer
+                        ,UserLedgerSerializer
+                        ,CreateUserLedgerSerializer
+                        ,CreateUserLedgerSerializer2
+                        ,DeleteUserLedSerializer
+                        )
+#Django provide serializers
+from django.core.serializers import serialize
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -30,6 +39,7 @@ class LedgerView(generics.CreateAPIView):
 
 #Handles a Post Request to General Ledger
 class CreateAccountView(APIView):
+    
     serializer_class = CreateAccountSerializer
     
     def post(self, request, format=None):
@@ -60,19 +70,14 @@ class CreateAccountView(APIView):
                 
                 ledger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)
                 ledger.save()
-                print(serializer.data.get('debit'))
+                
        
             return Response(AccountSerializer(ledger).data,status=status.HTTP_202_ACCEPTED)
 
 class DeleteAccountView(APIView):
     serializer_class = DeleteAccountSerializer
-
-    
     
     def delete(self, request, id, format=None):
-
-      
-
         if not self.request.session.exists(self.request.session.session_key):
             self.request.session.create()
 
@@ -87,6 +92,73 @@ class DeleteAccountView(APIView):
         #Pulling a query of all the items in the ledger
         all_ledger = Ledger.objects.all()
         return Response(AccountSerializer(all_ledger, many=True).data,status=status.HTTP_201_CREATED)
+
+class DeleteUserView(APIView):
+    serializer_class = DeleteUserLedSerializer
+    
+    def delete(self, request, id, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(): 
+            print("Serializer is valid")
+        print(id)
+        #Will Get the item and then delete it
+        ledger = userLedger1.objects.all().delete()
+        #ledger.delete()
+
+        #Pulling a query of all the items in the ledger
+        all_ledger = userLedger1.objects.all()
+        return HttpResponse('<h1>All Deleted</h1>')
+        #return Response(UserLedgerSerializer(all_ledger, many=True).data,status=status.HTTP_201_CREATED)
+
+
+class UserLedgerPOST(APIView):
+    serializer_class = CreateUserLedgerSerializer2 if userLedger1.objects.all().count() > 0 else CreateUserLedgerSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            print("Serializer is valid")
+
+        date = serializer.data.get('date')
+        amount = serializer.data.get('amount')
+        description = serializer.data.get('description')
+        user = serializer.data.get('userName')
+        rate = serializer.data.get('rate')
+
+            
+                
+        #Main Ledger Instance
+        tempLedger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)  
+        tempLedger.save()
+            
+            
+        if not userLedger1.objects.exists():
+            instUserPro = UserProfile(name=user, rate=rate)
+            instUserPro.save()
+
+        tempLine = userLedger1(date = date, 
+                            debit = amount if amount > 0 else 0, 
+                            credit = amount if amount < 0 else 0,
+                            description = description,
+                            ledger=tempLedger, 
+                            user =  None if userLedger1.objects.exists() else instUserPro) 
+
+
+        tempLine.save()
+        
+        allItems = userLedger1.objects.all()
+
+        return Response(UserLedgerSerializer(allItems, many=True).data,status=status.HTTP_201_CREATED)
+
+
+#Split the amount
+
+
+
 
 
 def index(request):
@@ -117,6 +189,11 @@ def entryPOST(request):
         print(request.method)
         return JsonResponse({'status': 'error'})
     
-
-
+#Debug & playaround
+def tester(request):
+    subclasses = AppLedger.__subclasses__()
+    output = subclasses[0].objects.first()
     
+    print(f"output: {output}\n output-type: {type(output)}")
+    subclasses_list = [str(sc.user) for sc in subclasses]
+    return JsonResponse(subclasses_list, safe=False)
