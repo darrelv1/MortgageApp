@@ -12,6 +12,7 @@ from .serializers import (AccountSerializer
                         ,CreateUserLedgerSerializer
                         ,CreateUserLedgerSerializer2
                         ,DeleteUserLedSerializer
+                        ,splitSerializer
                         )
 #Django provide serializers
 from django.core.serializers import serialize
@@ -21,13 +22,151 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
-
 import json
 
 
-def delALLledger(request):
-    Ledger.objects.all().delete()
+
+"""
+
+ALL GET REQUESTS
+
+"""
+
+
+
+
+"""
+********************************
+    ALL DELETE REQUESTS
+********************************
+"""
+
+"""GENERIC HELPERS"""
+
+#mini-func get target object
+def get_SpecificLedgerID(MDL,id):
+    return  MDL.objects.get(id)
+
+#All data deleted
+def genericDeleteAll(MDL):
+    desc = MDL.__str__()
+    MDL.objects.all().delete()
+    return HttpResponse(f"<h1>DELETED {desc}</h1>")
+
+#With a target ID
+def genericDelete(MDL,id):
+    targetLedger = get_SpecificLedgerID(MDL,id)
+    desc = targetLedger.__str__()
+    targetLedger.delete()
+    return HttpResponse(f"<h1>ledger {desc} delete</h1>")
+
+#Constructing AppLedgers    
+def getAppLedgers(): 
+    subclasses = AppLedger.__subclasses__()
+    container = [miniledger for miniledger in subclasses]
+    return container 
+
+#applying function to each subclass of AppLedger
+def getAppLedgersF(func): 
+    subclasses = AppLedger.__subclasses__()
+    container = [func(miniledger) for miniledger in subclasses]
+    return container 
+
+def delete_Error_Decorator(func):
+    def wrapper(request, *args, **kwargs):
+        try: 
+            result = func(request, *args, **kwargs)
+        except Exception as e: 
+            result = HttpResponse("Deletion Error: " + str(e), status=500)
+        return result
+    return wrapper
+        
+
+"""LEDGER"""
+
+#deletes all main LedgerEntries
+@delete_Error_Decorator
+def deleteALLledger(request):
+    genericDeleteAll(Ledger)
     return HttpResponse("<h1>All Deleted</h1>")
+
+#delete specific LedgerEntry
+@delete_Error_Decorator
+def deleteLedger(request, id):
+    return genericDelete(Ledger,id)
+
+
+"""ALL APPLEDGER SUBCLASSES"""
+
+#deletes all Entries from AppLedger subclasses
+@delete_Error_Decorator
+def deleteALLsubclasses(request):
+    getAppLedgersF(genericDeleteAll)
+    return HttpResponse("<h1>All Deleted</h1>")
+
+"""USERLEDGER1"""
+
+#deletes all Entries from AppLedger subclasses
+@delete_Error_Decorator
+def deleteALL_userledger1(request):
+    return genericDeleteAll(userLedger1)
+
+#delete specific LedgerEntry
+@delete_Error_Decorator
+def delete_userledger1(request, id):
+    return genericDelete(userLedger1,id)    
+
+"""USERLEDGER2"""
+
+#deletes all Entries from AppLedger subclasses
+@delete_Error_Decorator
+def deleteALL_userledger2(request):
+    return genericDeleteAll(userLedger2)
+    
+#delete specific LedgerEntry
+@delete_Error_Decorator
+def delete_userledger2(request, id):
+    return  genericDelete(userLedger2,id)
+
+"""USERLEDGER3"""
+
+#deletes all Entries from AppLedger subclasses
+@delete_Error_Decorator
+def deleteALL_userledger3(request):
+    return genericDeleteAll(userLedger3)
+
+#delete specific LedgerEntry
+@delete_Error_Decorator
+def delete_userledger3(request, id):
+    return genericDelete(userLedger3,id)
+    
+
+#***SPLIT***
+
+
+"""
+
+ALL CREATE REQUESTS
+
+"""
+"""
+
+ALL UPDATE REQUESTS
+
+"""
+
+
+
+
+def delALLappledger(request):
+    AppLedger.__subclasses__()
+    a = [ e.objects.all().delete() for e in AppLedger.__subclasses__() ]
+    return HttpResponse("<h1>All Deleted</h1>")
+
+def delALLusers(request):
+    UserProfile.objects.all().delete()
+    return HttpResponse("<h1>All Deleted</h1>")
+   
 
 def getLastItem():
     lastitem = Ledger.objects.order_by('id').last()
@@ -155,9 +294,134 @@ class UserLedgerPOST(APIView):
         return Response(UserLedgerSerializer(allItems, many=True).data,status=status.HTTP_201_CREATED)
 
 
+class UserLedgerPOST2(APIView):
+    serializer_class = CreateUserLedgerSerializer2 if userLedger2.objects.all().count() > 0 else CreateUserLedgerSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            print("Serializer is valid")
+
+        date = serializer.data.get('date')
+        amount = serializer.data.get('amount')
+        description = serializer.data.get('description')
+        user = serializer.data.get('userName')
+        rate = serializer.data.get('rate')
+
+            
+                
+        #Main Ledger Instance
+        tempLedger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)  
+        tempLedger.save()
+            
+            
+        if not userLedger2.objects.exists():
+            instUserPro = UserProfile(name=user, rate=rate)
+            instUserPro.save()
+
+        tempLine = userLedger2(date = date, 
+                            debit = amount if amount > 0 else 0, 
+                            credit = amount if amount < 0 else 0,
+                            description = description,
+                            ledger=tempLedger, 
+                            user =  None if userLedger2.objects.exists() else instUserPro) 
+
+        
+        tempLine.save()
+
+
+        
+        allItems = userLedger2.objects.all()
+
+        return Response(UserLedgerSerializer(allItems, many=True).data,status=status.HTTP_201_CREATED)
+
+class UserLedgerPOST3(APIView):
+    serializer_class = CreateUserLedgerSerializer2 if userLedger3.objects.all().count() > 0 else CreateUserLedgerSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            print("Serializer is valid")
+
+        date = serializer.data.get('date')
+        amount = serializer.data.get('amount')
+        description = serializer.data.get('description')
+        user = serializer.data.get('userName')
+        rate = serializer.data.get('rate')
+
+            
+                
+        #Main Ledger Instance
+        tempLedger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)  
+        tempLedger.save()
+            
+            
+        if not userLedger3.objects.exists():
+            instUserPro = UserProfile(name=user, rate=rate)
+            instUserPro.save()
+
+        tempLine = userLedger3(date = date, 
+                            debit = amount if amount > 0 else 0, 
+                            credit = amount if amount < 0 else 0,
+                            description = description,
+                            ledger=tempLedger, 
+                            user =  None if userLedger3.objects.exists() else instUserPro) 
+
+
+        tempLine.save()
+        
+        allItems = userLedger3.objects.all()
+
+        return Response(UserLedgerSerializer(allItems, many=True).data,status=status.HTTP_201_CREATED)
+
+
 #Split the amount
 
+class entrySplit(APIView):
+    serialize_class = splitSerializer
 
+    def post(self, request, format=None):
+
+        serializer = self.serialize_class(data=request.data)
+
+        if serializer.is_valid():
+            
+            
+
+            date = serializer.data.get('date')
+            amount = serializer.data.get('amount')
+            description = serializer.data.get('description')
+
+            subclasses = AppLedger.__subclasses__()
+            output = subclasses[0].objects.first()
+            mainledger = Ledger.objects.create(
+                                                date=date,
+                                                debit= amount if amount > 0 else 0,
+                                                credit= amount if amount < 0 else 0,
+                                                description=description
+                                                )
+            appLedgers = [ele for ele in subclasses]
+
+            def rateExtractor(ele):
+                userid = ele.objects.first().user.id
+                userobj = UserProfile.objects.get(id=userid)
+                print(f"userobj: {userobj}\n userobj-type: {type(userobj)}")
+                
+                rateamount = amount * userobj.rate
+                print(f"rateamount: {rateamount}\n rateamount-type: {type(rateamount)}")
+
+                return ele.objects.create(
+                                    date=date
+                                    ,debit=rateamount
+                                    ,description=description
+                                    ,ledger=mainledger
+                                    )
+
+            list(map(lambda eleLedger: rateExtractor(eleLedger), appLedgers))
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 
@@ -190,10 +454,41 @@ def entryPOST(request):
         return JsonResponse({'status': 'error'})
     
 #Debug & playaround
-def tester(request):
+def tester2(request):
     subclasses = AppLedger.__subclasses__()
     output = subclasses[0].objects.first()
-    
-    print(f"output: {output}\n output-type: {type(output)}")
+    amount = 1200
+    mainledger = Ledger.objects.create(date="2008-08-29",debit=amount, description='Split Amount Testing')
+    appLedgers = [ele for ele in subclasses ]
+
+    def rateExtractor(ele):
+        userid = ele.objects.first().user.id
+        userobj = UserProfile.objects.get(id=userid)
+        print(f"userobj: {userobj}\n userobj-type: {type(userobj)}")
+        
+        rateamount = amount * userobj.rate
+        print(f"rateamount: {rateamount}\n rateamount-type: {type(rateamount)}")
+        return ele.objects.create(date="2008-08-29", debit=rateamount, description="Split Amount Testing",ledger=mainledger )
+
+
+    list(map(lambda eleLedger: rateExtractor(eleLedger), appLedgers))
+    #print(f"output: {appLedgers[0]}\n output-type: {type(appLedgers[0])}")
     subclasses_list = [str(sc.user) for sc in subclasses]
     return JsonResponse(subclasses_list, safe=False)
+
+
+def tester(request):
+    ledger = Ledger.objects.get(id=135)
+    print(ledger._meta.related_objects)
+    INSuserledger1 = ledger.userledger1.all()
+    INSuserledger2 = ledger.userledger2.all()   
+    INSuserledger3 = ledger.userledger3.all()
+    print(f'userledger1: {userLedger1}')
+    print(f'userledger2: {userLedger2}')
+    print(f'userledger3: {userLedger3}')
+    
+    return JsonResponse({"Hello": "hello"}, safe=False)
+    
+
+
+            

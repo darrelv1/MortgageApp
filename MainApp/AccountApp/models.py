@@ -28,6 +28,8 @@ class Ledger(models.Model):
     def save(self, *args, **kwargs):
         if Ledger.objects.all().exists():
             self.set_balance()
+        else: 
+            self.balance = self.debit - self.credit
         super().save(*args, **kwargs)
 
 
@@ -40,7 +42,7 @@ def getLastItem():
 
 class UserProfile(models.Model):
     name = models.CharField(max_length=150)
-    rate = models.IntegerField(null=True)
+    rate = models.FloatField(null=True)
     
     def __str__(self):
         return f"{self.name}"
@@ -83,13 +85,13 @@ class AppLedger(models.Model):
     def save(self, *args, **kwargs):
         if self.__class__.objects.all().exists():
             self.set_balance()
+        else: 
+            self.balance = self.debit - self.credit
 
         count = self.__class__.objects.all().count()
         if count >= 1: 
             prevUser = self.__class__.objects.order_by('id').first().user
             self.user = prevUser
-      
-
         super().save(*args, **kwargs)
 
 

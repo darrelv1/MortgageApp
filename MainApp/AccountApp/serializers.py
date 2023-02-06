@@ -26,17 +26,20 @@ class DeleteUserLedSerializer(serializers.ModelSerializer):
 class CreateUserLedgerSerializer(serializers.Serializer):
     date = serializers.DateField(required=True)
     amount = serializers.IntegerField(required=True)
-    description = serializers.CharField(max_length = 100, required=True)
+    description = serializers.CharField(max_length = 150, required=True)
     userName = serializers.CharField(required=True)
     rate = serializers.FloatField(required=True)
 
 class CreateUserLedgerSerializer2 (serializers.Serializer):
     date = serializers.DateField(required=True)
     amount = serializers.IntegerField(required=True)
-    description = serializers.CharField(max_length = 100, required=True)
+    description = serializers.CharField(max_length = 150, required=True)
+
+class splitSerializer(serializers.Serializer):
+    date = serializers.DateField(required=True)
+    amount = serializers.IntegerField(required=True)
+    description = serializers.CharField(max_length = 150, required=True)
     
-
-
     # class Meta:
     #   fields = ['data', 'amount', 'description', 'userName', 'rate']
 
