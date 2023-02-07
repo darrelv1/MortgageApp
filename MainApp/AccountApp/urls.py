@@ -14,7 +14,13 @@ from .views import (
                    tester, 
                    DeleteUserView, 
                    delALLappledger, 
-                   delALLusers
+                   delALLusers,
+                   delete_userledger1,
+                   delete_userledger2,
+                   delete_userledger3,
+                   delete_split1,
+                   delete_split2,
+                   delete_split3,
 )
 
 
@@ -29,6 +35,13 @@ urlpatterns = [
     path('deluserLedger/<int:id>', DeleteUserView.as_view()),
     path('delappLedgers/',delALLappledger),
     path('delusers/', delALLusers),
+
+    path('deleteUL1/<int:id>', delete_userledger1),
+    path('deleteUL2/<int:id>', delete_userledger2),
+    path('deleteUL3/<int:id>', delete_userledger3),
+    path('deleteSplit1/<int:id>', delete_split1),
+    path('deleteSplit2/<int:id>', delete_split2),
+    path('deleteSplit3/<int:id>', delete_split3),
 
     path('createU/', UserLedgerPOST.as_view()),
     path('createU2/', UserLedgerPOST2.as_view()),

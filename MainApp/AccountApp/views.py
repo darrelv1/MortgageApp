@@ -27,9 +27,9 @@ import json
 
 
 """
-
+********************************
 ALL GET REQUESTS
-
+********************************
 """
 
 
@@ -43,9 +43,26 @@ ALL GET REQUESTS
 
 """GENERIC HELPERS"""
 
+#plug-in pass through mutiple params 
+def call_function(func, *args,):
+        return func(*args)
+
 #mini-func get target object
 def get_SpecificLedgerID(MDL,id):
-    return  MDL.objects.get(id)
+    return  MDL.objects.get(id = id)
+        
+
+#Constructing AppLedgers    
+def getAppLedgers(): 
+    subclasses = AppLedger.__subclasses__()
+    container = [miniledger for miniledger in subclasses]
+    return container 
+
+#applying function to each subclass of AppLedger
+def getAppLedgersF(func): 
+    subclasses = AppLedger.__subclasses__()
+    container = [func(miniledger) for miniledger in subclasses]
+    return container 
 
 #All data deleted
 def genericDeleteAll(MDL):
@@ -60,18 +77,7 @@ def genericDelete(MDL,id):
     targetLedger.delete()
     return HttpResponse(f"<h1>ledger {desc} delete</h1>")
 
-#Constructing AppLedgers    
-def getAppLedgers(): 
-    subclasses = AppLedger.__subclasses__()
-    container = [miniledger for miniledger in subclasses]
-    return container 
-
-#applying function to each subclass of AppLedger
-def getAppLedgersF(func): 
-    subclasses = AppLedger.__subclasses__()
-    container = [func(miniledger) for miniledger in subclasses]
-    return container 
-
+#error handling decorator 
 def delete_Error_Decorator(func):
     def wrapper(request, *args, **kwargs):
         try: 
@@ -80,7 +86,27 @@ def delete_Error_Decorator(func):
             result = HttpResponse("Deletion Error: " + str(e), status=500)
         return result
     return wrapper
-        
+
+#Split decorator
+@delete_Error_Decorator
+def split_Decorator(func):
+    def wrapper(MDL, id):
+        try: 
+            refLedger = MDL.objects.get(id=id)
+            ledger_ID = refLedger.ledger_id
+            userLedgers = getAppLedgers()
+            # for userLedger in userLedgers:
+            #     #utilizing the ledger id of the intial query to collect each userledger's corresponding related obj
+            #     userLedger_line = userLedger.objects.get(ledger_id=ledger_ID)
+            #     id =  userLedger_line.id    
+            #     func(userLedger, id)
+            func(Ledger, ledger_ID)
+            return "split success"
+        except Exception as e:
+            print(e)
+            return "split failed"
+    return wrapper
+
 
 """LEDGER"""
 
@@ -143,16 +169,41 @@ def delete_userledger3(request, id):
 
 #***SPLIT***
 
+#subledger delete all affiliated entries from all ledgers
+#alternative generic delete method
+@split_Decorator
+def genericDelete_alt(MDL, id):
+    targetLedger = get_SpecificLedgerID(MDL,id)
+    desc = targetLedger.__str__()
+    targetLedger.delete()
+
+def delete_split1(request, id):
+    genericDelete_alt(userLedger1, id)
+    return HttpResponse(f"<h1>deleted {id} </h1>")
+
+def delete_split2(request, id):
+    genericDelete_alt(userLedger2, id)
+    return HttpResponse(f"<h1>deleted {id} </h1>")
+
+def delete_split3(request, id):
+    genericDelete_alt(userLedger3, id)
+    return HttpResponse(f"<h1>deleted {id} </h1>")
+
 
 """
-
+********************************
 ALL CREATE REQUESTS
+********************************
+"""
+
+
+
+
 
 """
-"""
-
+********************************
 ALL UPDATE REQUESTS
-
+********************************
 """
 
 
