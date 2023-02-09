@@ -5,7 +5,8 @@ from .Controllers import ProfileController
 
 from .models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
 #Custome Built Serializers
-from .serializers import (AccountSerializer
+from .serializers import (
+                         AccountSerializer
                         ,CreateAccountSerializer
                         ,DeleteAccountSerializer
                         ,UserLedgerSerializer
@@ -14,13 +15,25 @@ from .serializers import (AccountSerializer
                         ,DeleteUserLedSerializer
                         ,splitSerializer
                         )
+
+#CRUD plugins:
+from .Controllers.CRUD_methods import (
+                        call_function
+                        ,get_SpecificLedgerID
+                        ,getAppLedgers
+                        ,getAppLedgersF
+                        ,genericDelete
+                        ,genericDeleteAll
+                        ,delete_Error_Decorator
+                        ,split_Decorator
+                        ,reBalance
+                        )
 #Django provide serializers
 from django.core.serializers import serialize
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 
 import json
 
@@ -40,73 +53,6 @@ ALL GET REQUESTS
     ALL DELETE REQUESTS
 ********************************
 """
-
-"""GENERIC HELPERS"""
-
-#plug-in pass through mutiple params 
-def call_function(func, *args,):
-        return func(*args)
-
-#mini-func get target object
-def get_SpecificLedgerID(MDL,id):
-    return  MDL.objects.get(id = id)
-        
-
-#Constructing AppLedgers    
-def getAppLedgers(): 
-    subclasses = AppLedger.__subclasses__()
-    container = [miniledger for miniledger in subclasses]
-    return container 
-
-#applying function to each subclass of AppLedger
-def getAppLedgersF(func): 
-    subclasses = AppLedger.__subclasses__()
-    container = [func(miniledger) for miniledger in subclasses]
-    return container 
-
-#All data deleted
-def genericDeleteAll(MDL):
-    desc = MDL.__str__()
-    MDL.objects.all().delete()
-    return HttpResponse(f"<h1>DELETED {desc}</h1>")
-
-#With a target ID
-def genericDelete(MDL,id):
-    targetLedger = get_SpecificLedgerID(MDL,id)
-    desc = targetLedger.__str__()
-    targetLedger.delete()
-    return HttpResponse(f"<h1>ledger {desc} delete</h1>")
-
-#error handling decorator 
-def delete_Error_Decorator(func):
-    def wrapper(request, *args, **kwargs):
-        try: 
-            result = func(request, *args, **kwargs)
-        except Exception as e: 
-            result = HttpResponse("Deletion Error: " + str(e), status=500)
-        return result
-    return wrapper
-
-#Split decorator
-@delete_Error_Decorator
-def split_Decorator(func):
-    def wrapper(MDL, id):
-        try: 
-            refLedger = MDL.objects.get(id=id)
-            ledger_ID = refLedger.ledger_id
-            userLedgers = getAppLedgers()
-            # for userLedger in userLedgers:
-            #     #utilizing the ledger id of the intial query to collect each userledger's corresponding related obj
-            #     userLedger_line = userLedger.objects.get(ledger_id=ledger_ID)
-            #     id =  userLedger_line.id    
-            #     func(userLedger, id)
-            func(Ledger, ledger_ID)
-            return "split success"
-        except Exception as e:
-            print(e)
-            return "split failed"
-    return wrapper
-
 
 """LEDGER"""
 
@@ -471,6 +417,8 @@ class entrySplit(APIView):
                                     )
 
             list(map(lambda eleLedger: rateExtractor(eleLedger), appLedgers))
+        #instead of using rebalance try using balance() and pass through the objs you want to rebalance OR rebuild the save()
+        reBalance()
 
         return Response(status=status.HTTP_201_CREATED)
 

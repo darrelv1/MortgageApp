@@ -4,14 +4,24 @@ from django.core.exceptions import ValidationError
 from .BaseApp.Profiles import UserInvestor
 
 
+
+def validator_not_negative(value):
+    if value > 0:
+        raise ValidationError(f"{value} is not a negative number! Please enter a credit")
+   
+def validator_not_positive(value):
+        if value < 0:
+            raise ValidationError(f"{value} is not a positive number! Please enter a debit")
+
+
 # Create your models here.
 class Ledger(models.Model):
     date = models.DateField(null=True)
-    debit = models.IntegerField(default=0)
-    credit = models.IntegerField(default=0)
+    debit = models.IntegerField(default=0, validators=[validator_not_positive])
+    credit = models.IntegerField(default=0, validators=[validator_not_negative])
     balance = models.IntegerField(default=0)
     description = models.CharField(null=True, max_length=150)
-    
+   
 
     def __str__(self):
         return f"{self.description}"
@@ -25,12 +35,14 @@ class Ledger(models.Model):
         netAmount = self.debit - self.credit
         self.balance = prevBalance + netAmount
 
-    def save(self, *args, **kwargs):
-        if Ledger.objects.all().exists():
-            self.set_balance()
-        else: 
-            self.balance = self.debit - self.credit
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if Ledger.objects.all().exists():
+    #         self.set_balance()
+    #     else: 
+    #         self.balance = self.debit - self.credit
+    #     super().save(*args, **kwargs)
+
+    
 
 
 def getLastItem():
@@ -58,8 +70,8 @@ class UserProfile(models.Model):
 
 class AppLedger(models.Model):
     date = models.DateField(null=True)
-    debit = models.IntegerField(null=True)
-    credit = models.IntegerField(null=True)
+    debit = models.IntegerField(default=0, validators=[validator_not_positive])
+    credit = models.IntegerField(default=0, validators=[validator_not_negative])
     balance = models.IntegerField(default=False, null=True)
     description = models.CharField(null=True, max_length=150)
     ledger = models.ForeignKey(Ledger, on_delete=models.CASCADE,null=True, blank=True, related_name='%(class)s')
@@ -68,7 +80,7 @@ class AppLedger(models.Model):
 
     class Meta: 
         abstract = True
-        ordering = ['date']
+        ordering = ['id']
 
     def __str__(self):
         return f"Description: {self.description}, Current Balance: {self.balance} and the Date of this transaction was {self.date}"
@@ -83,16 +95,17 @@ class AppLedger(models.Model):
         self.balance = prevBalance + netAmount
 
     def save(self, *args, **kwargs):
-        if self.__class__.objects.all().exists():
-            self.set_balance()
-        else: 
-            self.balance = self.debit - self.credit
+        # if self.__class__.objects.all().exists():
+        #     self.set_balance()
+    #     else: 
+    #         self.balance = self.debit - self.credit
 
         count = self.__class__.objects.all().count()
         if count >= 1: 
             prevUser = self.__class__.objects.order_by('id').first().user
             self.user = prevUser
         super().save(*args, **kwargs)
+    
 
 
 
