@@ -21,6 +21,9 @@ from .views import (
                    delete_split1,
                    delete_split2,
                    delete_split3,
+                   getLedger,
+                   createLedger,
+                   justTesting
 )
 
 
@@ -47,8 +50,11 @@ urlpatterns = [
     path('createU2/', UserLedgerPOST2.as_view()),
     path('createU3/', UserLedgerPOST3.as_view()),
 
-    path('tester/', tester),
-    path('split/', entrySplit.as_view())
+    path('tester/', justTesting),
+    path('split/', entrySplit.as_view()),
+
+    path('qwerty/', createLedger.as_view()),
+    path('getLedger/<str:id>', getLedger.as_view())
     
 ]
 

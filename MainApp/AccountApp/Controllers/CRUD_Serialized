@@ -1,20 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
-from django.db.models import ManyToOneRel
 
 
 from ..models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
-#Custome Built Serializers
-from ..serializers import (AccountSerializer
-                        ,CreateAccountSerializer
-                        ,DeleteAccountSerializer
-                        ,UserLedgerSerializer
-                        ,CreateUserLedgerSerializer
-                        ,CreateUserLedgerSerializer2
-                        ,DeleteUserLedSerializer
-                        ,splitSerializer
-                        )
+
 #Django provide serializers
 from django.core.serializers import serialize
 
@@ -25,45 +15,16 @@ from rest_framework.response import Response
 import json
 
 
-
 """GENERIC HELPERS"""
 
 #plug-in pass through mutiple params 
 def call_function(func, *args,):
         return func(*args)
 
-
-
 #mini-func get target object
-def get_SpecificLedgerID_by(MDL, field, value):
-
-    switcher = {
-        "id" : MDL.objects.get(id = int(value) if type(value) == str else value) or None
-    }
-    product = switcher.get(field)
-    return  product
-
-
-   
-def get_LedgerRelated(MDL):
-  
-    pass
-
-
-#mini-func get target object
-def get_SpecificLedgerID(MDL, id):
+def get_SpecificLedgerID(MDL,id):
     return  MDL.objects.get(id = id)
-
-#Get Related_Names from the Many to One
-def get_relatedNames_Many2One(MDL):  
-  ledger_fields = MDL._meta.get_fields()
-  related_names = []
-
-  for field in ledger_fields:
-    if isinstance(field, ManyToOneRel):
-        related_names.append(field.related_name)
-
-  return related_names
+        
 
 #Constructing AppLedgers    
 def getAppLedgers(): 
@@ -110,16 +71,6 @@ def delete_Error_Decorator(func):
         return result
     return wrapper
 
-def Error_Decorator(func):
-    def wrapper(request, *args, **kwargs):
-        try: 
-            result = func(request, *args, **kwargs)
-            reBalance()
-        except Exception as e: 
-            result = HttpResponse("General Error: " + str(e), status=500)
-        return result
-    return wrapper
-
 def modifyBalance(MDLobj):
         currentID = MDLobj.id
         try:
@@ -131,10 +82,7 @@ def modifyBalance(MDLobj):
             prevBalance = 0
             MDLobj.balance = prevBalance
 
-        netAmount = MDLobj.debit + MDLobj.credit 
-        if MDLobj.id == 192:
-            print(f"net amount {netAmount}")
-            print(f"prevBalance {prevBalance}")
+        netAmount = MDLobj.debit - (MDLobj.credit * -1)
         MDLobj.balance = prevBalance + netAmount
         MDLobj.save()
         return MDLobj.balance
@@ -180,6 +128,3 @@ def split_Decorator(func):
             return "split failed"
     reBalance()        
     return wrapper
-
-
-

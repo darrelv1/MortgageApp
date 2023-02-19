@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 from .Controllers import ProfileController
+from django.db.models import ForeignKey
+from django.db.models import ManyToOneRel
 
 from .models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
 #Custome Built Serializers
@@ -14,17 +16,22 @@ from .serializers import (
                         ,CreateUserLedgerSerializer2
                         ,DeleteUserLedSerializer
                         ,splitSerializer
+                        ,CreateLedgerSerializer,
+                        Ledger_Serializer
+                        #,FullLedgerSerializer
                         )
 
 #CRUD plugins:
 from .Controllers.CRUD_methods import (
                         call_function
                         ,get_SpecificLedgerID
+                        ,get_SpecificLedgerID_by
                         ,getAppLedgers
                         ,getAppLedgersF
                         ,genericDelete
                         ,genericDeleteAll
                         ,delete_Error_Decorator
+                        ,Error_Decorator
                         ,split_Decorator
                         ,reBalance
                         )
@@ -45,8 +52,72 @@ ALL GET REQUESTS
 ********************************
 """
 
+"""LEDGER"""
+#get Main Ledger
+class getLedger(APIView):
+
+    def get(self, request , id , format=None):
+        data = get_SpecificLedgerID_by(MDL=Ledger, field="id", value=id)
+        serializer = Ledger_Serializer(data)
+        return Response(serializer.data)
 
 
+
+
+class createLedger(APIView):
+    serializer_class = CreateLedgerSerializer
+    
+    @Error_Decorator
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+        return Response( Ledger_Serializer(Ledger.objects.all(),many=True).data, status=status.HTTP_202_ACCEPTED)
+
+
+def justTesting(request):
+
+
+    #45 min task 
+    #task
+    #git commit prior
+    # dynamic cross model query 
+
+
+
+    #what is the idea 
+
+    #1 The User's name is what will query the Ledger DB, not it's ID. so first transform 
+
+        #request data will be in string for example "Bill"\
+    #User = get_SpecificLedgerID_by(UserProfile, "name", "Darrel")
+    #UserID =  User.id
+    
+    #Due to access being restricted because there  is no direct relationship between Ledgher and userprofile, 
+    #The challenge is getting to iterate thorough all three models dynamically and not as manual insert "userledger__user_id"
+
+    """SO ESENTIALLY WE NEED TO DYNAMATICALLY CREATE A CROSS MODEL QUERY"""
+    #TargetUser_LedgerEntries = Ledger.objects.filter(user)
+
+    a = Ledger
+    #this is related_name Version for Ledger 
+    result = Ledger.objects.filter(userledger1__user_id = 12) 
+    #print(f'result {len(result)}')
+    #print(result)
+
+    #this is the related_Name version for User
+    a = UserProfile.objects.get(name = "Darrel")
+    fields = [field.name for field in UserProfile._meta.get_fields()]
+
+    #bean = UserProfile.objects.filter(userLedger1__)
+   
+
+    #letsee = Ledger.userledger1_set
+    letsee2 = Ledger.objects.filter(userledger1__user_id = 12)
+    print(f' length {type(letsee2)}')
+    
+    a = list(map(lambda x : str(x.description),letsee2))
+    return HttpResponse(f"<h1>{a}</h1>")
 
 """
 ********************************
@@ -66,7 +137,6 @@ def deleteALLledger(request):
 @delete_Error_Decorator
 def deleteLedger(request, id):
     return genericDelete(Ledger,id)
-
 
 """ALL APPLEDGER SUBCLASSES"""
 
@@ -348,8 +418,6 @@ class UserLedgerPOST3(APIView):
         user = serializer.data.get('userName')
         rate = serializer.data.get('rate')
 
-            
-                
         #Main Ledger Instance
         tempLedger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)  
         tempLedger.save()
@@ -384,7 +452,6 @@ class entrySplit(APIView):
         serializer = self.serialize_class(data=request.data)
 
         if serializer.is_valid():
-            
             
 
             date = serializer.data.get('date')

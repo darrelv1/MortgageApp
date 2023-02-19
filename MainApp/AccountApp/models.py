@@ -32,8 +32,20 @@ class Ledger(models.Model):
             self.debit = 0
         elif self.credit == None:
             self.credit = 0
-        netAmount = self.debit - self.credit
+        netAmount = self.debit + self.credit
         self.balance = prevBalance + netAmount
+        self.save()
+
+    def set_balance_Instance(self):
+        prevArray = Ledger.objects.filter(id__lt=self.id)
+        prevBalance = prevArray.last().balance
+        if self.debit == None:
+            self.debit = 0
+        elif self.credit == None:
+            self.credit = 0
+        netAmount = self.debit + self.credit
+        self.balance = prevBalance + netAmount
+        self.save()
 
     # def save(self, *args, **kwargs):
     #     if Ledger.objects.all().exists():
@@ -75,8 +87,7 @@ class AppLedger(models.Model):
     balance = models.IntegerField(default=False, null=True)
     description = models.CharField(null=True, max_length=150)
     ledger = models.ForeignKey(Ledger, on_delete=models.CASCADE,null=True, blank=True, related_name='%(class)s')
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE,null=True)
-
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, related_name='%(class)s')
 
     class Meta: 
         abstract = True
@@ -99,7 +110,8 @@ class AppLedger(models.Model):
         #     self.set_balance()
     #     else: 
     #         self.balance = self.debit - self.credit
-
+        
+        """Secure one user's policy"""
         count = self.__class__.objects.all().count()
         if count >= 1: 
             prevUser = self.__class__.objects.order_by('id').first().user
