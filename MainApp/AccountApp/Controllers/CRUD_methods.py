@@ -14,6 +14,7 @@ from ..serializers import (AccountSerializer
                         ,CreateUserLedgerSerializer2
                         ,DeleteUserLedSerializer
                         ,splitSerializer
+                        ,Ledger_Serializer
                         )
 #Django provide serializers
 from django.core.serializers import serialize
@@ -37,33 +38,32 @@ def call_function(func, *args,):
 #mini-func get target object
 def get_SpecificLedgerID_by(MDL, field, value):
 
+    defaultNumber = 12
     switcher = {
-        "id" : MDL.objects.get(id = int(value) if type(value) == str else value) or None
+        "id" : MDL.objects.get(id =defaultNumber if type(value) == str else value) or 0,
+        "name" : MDL.objects.get(name = str(value) if type(value) == int else value) or "None" 
     }
+    
     product = switcher.get(field)
     return  product
-
-
-   
-def get_LedgerRelated(MDL):
-  
-    pass
 
 
 #mini-func get target object
 def get_SpecificLedgerID(MDL, id):
     return  MDL.objects.get(id = id)
 
-#Get Related_Names from the Many to One
-def get_relatedNames_Many2One(MDL):  
+
+#Get Related_Names from the Many to One - (optional)
+def get_relatedNames_Many2One(MDL):
+  #Gather a collection of the model's field
   ledger_fields = MDL._meta.get_fields()
   related_names = []
-
+  #iterate through to validate if it's one to many field
   for field in ledger_fields:
     if isinstance(field, ManyToOneRel):
         related_names.append(field.related_name)
-
   return related_names
+
 
 #Constructing AppLedgers    
 def getAppLedgers(): 
@@ -71,11 +71,13 @@ def getAppLedgers():
     container = [miniledger for miniledger in subclasses]
     return container 
 
+
 #applying function to each subclass of AppLedger
 def getAppLedgersF(func): 
     subclasses = AppLedger.__subclasses__()
     container = [func(miniledger) for miniledger in subclasses]
     return container 
+
 
 #applying function to each subclass of AppLedger and the main Ledger
 def getLedgersF(func): 
@@ -84,6 +86,12 @@ def getLedgersF(func):
     allLedgers.append(Ledger)
     container = [func(ledger) for ledger in allLedgers]
     return container 
+
+#Serialization and creation of any model
+def RESTcreateLedger(serializer_class, Requestdata):
+    serializer = serializer_class(data= Requestdata)
+    if serializer.is_valid():
+        serializer.save()
   
 
 #All data deleted
@@ -99,6 +107,7 @@ def genericDelete(MDL,id):
     targetLedger.delete()
     return HttpResponse(f"<h1>ledger {desc} delete</h1>")
 
+
 #error handling decorator 
 def delete_Error_Decorator(func):
     def wrapper(request, *args, **kwargs):
@@ -110,6 +119,8 @@ def delete_Error_Decorator(func):
         return result
     return wrapper
 
+
+#Generic Error Decorator
 def Error_Decorator(func):
     def wrapper(request, *args, **kwargs):
         try: 
@@ -120,6 +131,20 @@ def Error_Decorator(func):
         return result
     return wrapper
 
+def NameQuery_Decorator(func):
+    def wrapper(request, *args, **kwargs):
+        string = func(request, *args, **kwargs)
+        User = get_SpecificLedgerID_by(UserProfile, "name", string)
+        UserID =  User.id
+        userActivityList = []
+        userActivityList += Ledger.objects.filter(userledger1__user_id = UserID)
+        userActivityList += Ledger.objects.filter(userledger2__user_id = UserID)
+        userActivityList += Ledger.objects.filter(userledger3__user_id = UserID)
+        return Response(Ledger_Serializer(userActivityList, many=True).data,status=status.HTTP_200_OK)
+    return wrapper
+
+
+#Rebalance's Target Model
 def modifyBalance(MDLobj):
         currentID = MDLobj.id
         try:
@@ -140,6 +165,7 @@ def modifyBalance(MDLobj):
         return MDLobj.balance
 
 
+#Works with modifyBalance and reBalance
 def balance(MDL):
     allEntries = MDL.objects.all()
     new_Balances  = []
@@ -147,15 +173,18 @@ def balance(MDL):
         new_Balances.append(modifyBalance(item))
     return new_Balances  
 
+
+#reBalances all Ledger Models
 def reBalance():
     getLedgersF(balance)
-    
 
 
 """
 the split will be able to handle any entry regardless if it was included 
 in a entry split or just a single entry on it's own
 """
+
+
 #Split decorator
 @delete_Error_Decorator
 def split_Decorator(func):

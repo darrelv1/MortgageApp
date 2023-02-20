@@ -112,11 +112,14 @@ class AppLedger(models.Model):
     #         self.balance = self.debit - self.credit
         
         """Secure one user's policy"""
-        count = self.__class__.objects.all().count()
-        if count >= 1: 
-            prevUser = self.__class__.objects.order_by('id').first().user
-            self.user = prevUser
-        super().save(*args, **kwargs)
+        try:
+            count = self.__class__.objects.all().count()
+            if count >= 1: 
+                prevUser = self.__class__.objects.order_by('id').first().user
+                self.user = prevUser
+            super().save(*args, **kwargs)
+        except:
+            print("userLedger1 did not save successfully")
     
 
 

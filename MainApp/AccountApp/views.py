@@ -16,8 +16,9 @@ from .serializers import (
                         ,CreateUserLedgerSerializer2
                         ,DeleteUserLedSerializer
                         ,splitSerializer
-                        ,CreateLedgerSerializer,
-                        Ledger_Serializer
+                        ,CreateLedgerSerializer
+                        ,Ledger_Serializer
+                        ,userLedgers_Serializer
                         #,FullLedgerSerializer
                         )
 
@@ -34,6 +35,8 @@ from .Controllers.CRUD_methods import (
                         ,Error_Decorator
                         ,split_Decorator
                         ,reBalance
+                        ,NameQuery_Decorator
+                        ,RESTcreateLedger
                         )
 #Django provide serializers
 from django.core.serializers import serialize
@@ -61,64 +64,31 @@ class getLedger(APIView):
         serializer = Ledger_Serializer(data)
         return Response(serializer.data)
 
+#Get Ledger Objs by User Name
+class getUser_Ledgers(APIView):
+    @NameQuery_Decorator
+    def get(self, request, string, format= None):
+        return string
 
-
-
+#Create a Ledger Object         
 class createLedger(APIView):
     serializer_class = CreateLedgerSerializer
-    
     @Error_Decorator
     def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        RESTcreateLedger(self.serializer_class, request.data)
+        # serializer = self.serializer_class(data=request.data)
+        # if serializer.is_valid():
+        #     serializer.save()
         return Response( Ledger_Serializer(Ledger.objects.all(),many=True).data, status=status.HTTP_202_ACCEPTED)
 
-
-def justTesting(request):
-
-
-    #45 min task 
-    #task
-    #git commit prior
-    # dynamic cross model query 
-
-
-
-    #what is the idea 
-
-    #1 The User's name is what will query the Ledger DB, not it's ID. so first transform 
-
-        #request data will be in string for example "Bill"\
-    #User = get_SpecificLedgerID_by(UserProfile, "name", "Darrel")
-    #UserID =  User.id
-    
-    #Due to access being restricted because there  is no direct relationship between Ledgher and userprofile, 
-    #The challenge is getting to iterate thorough all three models dynamically and not as manual insert "userledger__user_id"
-
-    """SO ESENTIALLY WE NEED TO DYNAMATICALLY CREATE A CROSS MODEL QUERY"""
-    #TargetUser_LedgerEntries = Ledger.objects.filter(user)
-
-    a = Ledger
-    #this is related_name Version for Ledger 
-    result = Ledger.objects.filter(userledger1__user_id = 12) 
-    #print(f'result {len(result)}')
-    #print(result)
-
-    #this is the related_Name version for User
-    a = UserProfile.objects.get(name = "Darrel")
-    fields = [field.name for field in UserProfile._meta.get_fields()]
-
-    #bean = UserProfile.objects.filter(userLedger1__)
-   
-
-    #letsee = Ledger.userledger1_set
-    letsee2 = Ledger.objects.filter(userledger1__user_id = 12)
-    print(f' length {type(letsee2)}')
-    
-    a = list(map(lambda x : str(x.description),letsee2))
-    return HttpResponse(f"<h1>{a}</h1>")
-
+class inProgress(APIView):
+    serializer_class = userLedgers_Serializer
+    def post(self, request):
+        userLedger1.objects.get(id=22)
+        serializer = self.serializer_class(model_class=userLedger1, data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+        return Response(status=status.HTTP_202_ACCEPTED)
 """
 ********************************
     ALL DELETE REQUESTS

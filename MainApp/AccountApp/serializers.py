@@ -38,45 +38,55 @@ class CreateLedgerSerializer(serializers.ModelSerializer):
         return instance
 
 
-#UserLedger1, userLedger2, userLedger3
-# class UserLedgersSerializer(serializers.ModelSerializer):
+class userLedgers_Serializer(serializers.Serializer):
+    date = serializers.DateField(required=False)
+    amount = serializers.IntegerField()
+    balance = serializers.IntegerField(required=False)
+    description = serializers.CharField(required=False, max_length=150)
+    user = serializers.PrimaryKeyRelatedField(queryset=UserProfile.objects.all())
+    ledger = serializers.PrimaryKeyRelatedField(queryset=Ledger.objects.all())
 
-#     date =serializers.DateField(required=True)
-#     debit = serializers.IntegerField(required=True, default=0)
-#     credit = serializers.IntegerField(required=True, default=0)
-#     balance = serializers.IntegerField(required=True)
-#     description = serializers.CharField(required=True, max_length = 150)
-#     user = serializers.PrimaryKeyRelatedField(queryset=UserProfile.objects.all())
+    def __init__(self, *args, **kwargs):
+        for key in kwargs.keys():
+            print(f"key:{key}")
+        
+        self.model_class = kwargs.pop('model_class', None) 
+        try:
+            self.request = kwargs.get('context').get('request')
+            self.HTTPMETHOD = self.request.method
+            print(f"HTTP METHOD : {self.HTTPMETHOD}")
+            if self.HTTPMETHOD == 'POST':
+                self.fields.pop("balance")
+                # self.fields.pop("user")
+                self.fields.pop("ledger")
+        except:
+            print("didn't have a context parameter")
+        super().__init__(*args, **kwargs)
+
     
-#     def create(self, validated_data):
-#         """ Create and return a new ledger instance"""
-#         model_class = self.context.get('model_class')
-#         inst_ledger = model_class(
-#             date=validated_data.get('date'), 
-#             debit=validated_data.get('debit'),
-#             credits=validated_data.get('credit'),
-#             balance=validated_data.get('balance'),
-#             description=validated_data.get('description'),
-#             user=validated_data.get('user')
-#         )
-#         inst_ledger.save()
-#         return inst_ledger 
 
-#     def update(self, instance, validated_data):
+    def create(self, validated_data):
+        
+        ledger = self.model_class(
+            date=validated_data.get('date'),
+            debit = validated_data['amount'] if validated_data['amount'] > 0  else 0,
+            credit = validated_data['amount'] if validated_data['amount'] < 0 else 0,
+            # balance=validated_data.get('balance'),
+            description=validated_data.get('description'),
+            user=validated_data.get('user'),
+        )
+        ledger.save()
+        return ledger
 
-#         instance.date = validated_data.get('date', instance.date)
-#         instance.debit = validated_data.get('debit', instance.debit)
-#         instance.credit = validated_data.get('credit', instance.credit)
-#         instance.balance = validated_data.get('balance', instance.balance)
-#         instance.description = validated_data.get('description', instance.description)
-#         instance.user = validated_data.get('user', instance.user)
-#         instance.save()
-#         return instance 
-
-
-
-
-
+    def update(self, instance, validated_data):
+        instance.date = validated_data.get('date', instance.date)
+        instance.debit = validated_data.get('debit', instance.debit)
+        instance.credit = validated_data.get('credit', instance.credit)
+        instance.balance = validated_data.get('balance', instance.balance)
+        instance.description = validated_data.get('description', instance.description)
+        instance.user = validated_data.get('user', instance.user)
+        instance.save()
+        return instance
 
 
 
