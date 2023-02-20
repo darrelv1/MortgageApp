@@ -39,12 +39,12 @@ class CreateLedgerSerializer(serializers.ModelSerializer):
 
 
 class userLedgers_Serializer(serializers.Serializer):
-    date = serializers.DateField(required=False)
-    amount = serializers.IntegerField()
+    date = serializers.DateField(required=True)
+    amount = serializers.IntegerField(required=True)
     balance = serializers.IntegerField(required=False)
     description = serializers.CharField(required=False, max_length=150)
-    user = serializers.PrimaryKeyRelatedField(queryset=UserProfile.objects.all())
-    ledger = serializers.PrimaryKeyRelatedField(queryset=Ledger.objects.all())
+    user = serializers.PrimaryKeyRelatedField(required=False, queryset=UserProfile.objects.all())
+    ledger = serializers.PrimaryKeyRelatedField(required=False, queryset=Ledger.objects.all())
 
     def __init__(self, *args, **kwargs):
         for key in kwargs.keys():
@@ -57,7 +57,7 @@ class userLedgers_Serializer(serializers.Serializer):
             print(f"HTTP METHOD : {self.HTTPMETHOD}")
             if self.HTTPMETHOD == 'POST':
                 self.fields.pop("balance")
-                # self.fields.pop("user")
+                self.fields.pop("user")
                 self.fields.pop("ledger")
         except:
             print("didn't have a context parameter")
@@ -73,7 +73,7 @@ class userLedgers_Serializer(serializers.Serializer):
             credit = validated_data['amount'] if validated_data['amount'] < 0 else 0,
             # balance=validated_data.get('balance'),
             description=validated_data.get('description'),
-            user=validated_data.get('user'),
+            #user=validated_data.get('user'),
         )
         ledger.save()
         return ledger

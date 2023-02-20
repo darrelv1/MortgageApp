@@ -88,6 +88,9 @@ class inProgress(APIView):
         serializer = self.serializer_class(model_class=userLedger1, data = request.data)
         if serializer.is_valid():
             serializer.save()
+            print("it did save")
+        else:
+            print("not Valid")
         return Response(status=status.HTTP_202_ACCEPTED)
 """
 ********************************
