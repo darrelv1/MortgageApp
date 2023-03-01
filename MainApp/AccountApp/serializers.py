@@ -50,15 +50,16 @@ class userLedgers_Serializer(serializers.Serializer):
         for key in kwargs.keys():
             print(f"key:{key}")
         
-        self.model_class = kwargs.pop('model_class', None) 
+        self.model_class = kwargs.pop('model_class', None)
+       
         try:
-            self.request = kwargs.get('context').get('request')
-            self.HTTPMETHOD = self.request.method
-            print(f"HTTP METHOD : {self.HTTPMETHOD}")
-            if self.HTTPMETHOD == 'POST':
-                self.fields.pop("balance")
-                self.fields.pop("user")
-                self.fields.pop("ledger")
+                self.request = kwargs.get('context').get('request')
+                self.HTTPMETHOD = self.request.method
+                print(f"HTTP METHOD : {self.HTTPMETHOD}")
+                if self.HTTPMETHOD == 'POST':
+                    self.fields.pop("balance")
+                    self.fields.pop("user")
+                    self.fields.pop("ledger")
         except:
             print("didn't have a context parameter")
         super().__init__(*args, **kwargs)
@@ -71,9 +72,8 @@ class userLedgers_Serializer(serializers.Serializer):
             date=validated_data.get('date'),
             debit = validated_data['amount'] if validated_data['amount'] > 0  else 0,
             credit = validated_data['amount'] if validated_data['amount'] < 0 else 0,
-            # balance=validated_data.get('balance'),
             description=validated_data.get('description'),
-            #user=validated_data.get('user'),
+            
         )
         ledger.save()
         return ledger

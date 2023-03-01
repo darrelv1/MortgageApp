@@ -23,6 +23,7 @@ from .views import (
                    delete_split3,
                    getLedger,
                    getUser_Ledgers,
+                   getAll_userLedgers,
                    createLedger,
                    inProgress,
             
@@ -60,6 +61,7 @@ urlpatterns = [
     
     path('getLedger/<str:id>', getLedger.as_view()),
     path('getLedgerByName/<str:string>', getUser_Ledgers.as_view()),
+    path('getAllul', getAll_userLedgers.as_view()),
     
 ]
 

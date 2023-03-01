@@ -70,6 +70,15 @@ class getUser_Ledgers(APIView):
     def get(self, request, string, format= None):
         return string
 
+#Get all userLedger objects
+class getAll_userLedgers(APIView):
+    def get(self, request, format= None):
+        allData = getAppLedgers()
+        print(f'ALL DATA {allData}')
+        # genericSerializer = self.serialize_class(data = allData)
+        return Response(userLedgers_Serializer(allData, many=True).data, status=status.HTTP_200_OK)
+
+
 #Create a Ledger Object         
 class createLedger(APIView):
     serializer_class = CreateLedgerSerializer
