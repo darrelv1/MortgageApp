@@ -11,9 +11,25 @@ ALL LEDGER SERIALIZERS
 """RESPONSE SERIALIZERS"""
 
 class Ledger_Serializer(serializers.ModelSerializer):
+    
     class Meta:
         model = Ledger
         fields = '__all__'
+
+class testing(serializers.ModelSerializer):
+    userName =serializers.SerializerMethodField('get_username')
+
+
+    class Meta:
+        model = Ledger
+        fields = ('id', 'date', 'debit', 'credit',
+                'balance', 'description', 'userName')
+
+    def get_username(self, obj):
+        userID = self.fields("user")
+        print(f"userID {userID}")
+        return UserProfile.get(id=userID).name
+    
 
 
 #To serialize request incoming - only necessary fields 
@@ -39,20 +55,33 @@ class CreateLedgerSerializer(serializers.ModelSerializer):
 
 
 class userLedgers_Serializer(serializers.Serializer):
-    date = serializers.DateField(required=True)
-    amount = serializers.IntegerField(required=True)
+    date = serializers.DateField(required=False)
+    debit =serializers.IntegerField(required=False)
+    credit = serializers.IntegerField(required=False)
+    amount = serializers.IntegerField(required=False)
     balance = serializers.IntegerField(required=False)
     description = serializers.CharField(required=False, max_length=150)
     user = serializers.PrimaryKeyRelatedField(required=False, queryset=UserProfile.objects.all())
     ledger = serializers.PrimaryKeyRelatedField(required=False, queryset=Ledger.objects.all())
 
+
+    
+
     def __init__(self, *args, **kwargs):
+
         for key in kwargs.keys():
             print(f"key:{key}")
         
         self.model_class = kwargs.pop('model_class', None)
-       
+
         try:
+            #external fields, notice there is no self reference
+            fields = kwargs.pop('fields', None)
+        except: 
+            print("no field items found")
+        
+        try:
+                
                 self.request = kwargs.get('context').get('request')
                 self.HTTPMETHOD = self.request.method
                 print(f"HTTP METHOD : {self.HTTPMETHOD}")
@@ -60,33 +89,43 @@ class userLedgers_Serializer(serializers.Serializer):
                     self.fields.pop("balance")
                     self.fields.pop("user")
                     self.fields.pop("ledger")
+                    self.fields.pop("credit")
+                    self.fields.pop("debit")
+                if self.HTTPMETHOD == 'GET':
+                    self.fields.pop("amount")
         except:
             print("didn't have a context parameter")
+
         super().__init__(*args, **kwargs)
 
-    
+        if fields is not None:
+            #Drop any fields that are not specified in the 'fields' arguement
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
 
     def create(self, validated_data):
         
         ledger = self.model_class(
-            date=validated_data.get('date'),
+            date = validated_data.get('date'),
             debit = validated_data['amount'] if validated_data['amount'] > 0  else 0,
             credit = validated_data['amount'] if validated_data['amount'] < 0 else 0,
-            description=validated_data.get('description'),
+            description = validated_data.get('description'),
             
         )
         ledger.save()
         return ledger
 
-    def update(self, instance, validated_data):
-        instance.date = validated_data.get('date', instance.date)
-        instance.debit = validated_data.get('debit', instance.debit)
-        instance.credit = validated_data.get('credit', instance.credit)
-        instance.balance = validated_data.get('balance', instance.balance)
-        instance.description = validated_data.get('description', instance.description)
-        instance.user = validated_data.get('user', instance.user)
-        instance.save()
-        return instance
+    # def update(self, instance, validated_data):
+    #     instance.date = validated_data.get('date', instance.date)
+    #     instance.debit = validated_data.get('debit', instance.debit)
+    #     instance.credit = validated_data.get('credit', instance.credit)
+    #     instance.balance = validated_data.get('balance', instance.balance)
+    #     instance.description = validated_data.get('description', instance.description)
+    #     instance.user = validated_data.get('user', instance.user)
+    #     instance.save()
+    #     return instance
 
 
 

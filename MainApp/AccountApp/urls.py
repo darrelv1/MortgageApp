@@ -21,8 +21,8 @@ from .views import (
                    delete_split1,
                    delete_split2,
                    delete_split3,
-                   getLedger,
-                   getUser_Ledgers,
+                   getLedgerby_id,
+                   getLedgersby_Name,
                    getAll_userLedgers,
                    createLedger,
                    inProgress,
@@ -59,8 +59,8 @@ urlpatterns = [
     path('qwerty/', createLedger.as_view()),
     path('inProgress/', inProgress.as_view()),
     
-    path('getLedger/<str:id>', getLedger.as_view()),
-    path('getLedgerByName/<str:string>', getUser_Ledgers.as_view()),
+    path('getLedger/<str:id>', getLedgerby_id.as_view()),
+    path('getLedgerByName/<str:string>', getLedgersby_Name.as_view()),
     path('getAllul', getAll_userLedgers.as_view()),
     
 ]

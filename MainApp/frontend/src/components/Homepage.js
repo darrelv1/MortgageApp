@@ -10,26 +10,29 @@ import {
 } from 'react-router-dom'
 
 
-const LandingPage = () => {
+const LandingPage = (props) => {
 
     return (
-        <h1> Home: Landing Page</h1>
+        <div>
+        <h1> Home: Landing PageDarel</h1>
+        <button onClick={props.api}>API</button>
+        
+        DATA:
+    
+        </div>
     )
 }
-
 
 const Homepage = (props) =>{
 
     return (
        <Router>
-    <Routes>
-    
-        <Route  path="create" element={<EntryForm />}/>
-        <Route  path="/" element={<LandingPage />}/>
-        <Route  path="profile" element={<ProfilePage />}/>
-        
-    </Routes>
-</Router>
+            <Routes>
+                <Route  path="create" element={<EntryForm/>}/>
+                <Route  path="" element={<LandingPage api={props.apiCall} data={props.info}/>}/>
+                <Route  path="profile" element={<ProfilePage />}/>   
+            </Routes>
+        </Router>
         )
     }
 

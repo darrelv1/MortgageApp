@@ -119,7 +119,7 @@ class AppLedger(models.Model):
                 self.user = prevUser
             super().save(*args, **kwargs)
         except:
-            print("userLedger1 did not save successfully ")
+            print("userLedger1 did not save successfully sp fi")
     
 
 

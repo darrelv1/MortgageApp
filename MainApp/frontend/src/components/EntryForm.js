@@ -2,11 +2,11 @@ import React  from 'react'
 
 
 
-const EntryForm = () => {
+const EntryForm = (props) => {
     let [date, amount, description] = React.useState(0,0,0);
  
-    const accountURL = "http://localhost:8000/Accounts_POST"
-    const altURL = "http://127.0.0.1:8000/Accounts_POST/"
+    const accountURL = "http://localhost:8000/Accounts_POST/l;kj"
+    const altURL = "http://127.0.0.1:8000/Accounts_POST/dfgsdfg"
  
     const updateDate = (event) => {
        date = event.target.value

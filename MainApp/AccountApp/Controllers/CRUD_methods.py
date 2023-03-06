@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.db.models import ManyToOneRel
+import re
 
 
 from ..models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
@@ -33,25 +34,33 @@ import json
 def call_function(func, *args,):
         return func(*args)
 
-
-
-#mini-func get target object
+#dynamic func to get target object by name or id
 def get_SpecificLedgerID_by(MDL, field, value):
+    letter_pattern = re.compile(r"[A-Za-z]+")
+    number_pattern = re.compile(r"[0-9]+")
+    #first entry in the model
+    default = MDL.objects.order_by('id').first().id
 
-    defaultNumber = 12
     switcher = {
-        "id" : MDL.objects.get(id =defaultNumber if type(value) == str else value) or 0,
-        "name" : MDL.objects.get(name = str(value) if type(value) == int else value) or "None" 
+        "id" : MDL.objects.get(id = (
+                                    int(value) if 
+                                    number_pattern.search(value) else 
+                                    default
+                                    )),
+
+        "name" : UserProfile.objects.get(name = (
+                                    str(value) if 
+                                    letter_pattern.search(value) and field == "name" else 
+                                    "Darrel"
+                                    ))
     }
-    
+   
     product = switcher.get(field)
     return  product
-
 
 #mini-func get target object
 def get_SpecificLedgerID(MDL, id):
     return  MDL.objects.get(id = id)
-
 
 #Get Related_Names from the Many to One - (optional)
 def get_relatedNames_Many2One(MDL):
@@ -65,7 +74,7 @@ def get_relatedNames_Many2One(MDL):
   return related_names
 
 
-#Constructing AppLedgers    
+# get all AppLedgers    
 def getAppLedgers(): 
     subclasses = AppLedger.__subclasses__()
     container = [miniledger for miniledger in subclasses]
@@ -77,7 +86,6 @@ def getAppLedgersF(func):
     subclasses = AppLedger.__subclasses__()
     container = [func(miniledger) for miniledger in subclasses]
     return container 
-
 
 #applying function to each subclass of AppLedger and the main Ledger
 def getLedgersF(func): 
@@ -93,7 +101,6 @@ def RESTcreateLedger(serializer_class, Requestdata):
     if serializer.is_valid():
         serializer.save()
   
-
 #All data deleted
 def genericDeleteAll(MDL):
     desc = MDL.__str__()
@@ -157,9 +164,6 @@ def modifyBalance(MDLobj):
             MDLobj.balance = prevBalance
 
         netAmount = MDLobj.debit + MDLobj.credit 
-        if MDLobj.id == 192:
-            print(f"net amount {netAmount}")
-            print(f"prevBalance {prevBalance}")
         MDLobj.balance = prevBalance + netAmount
         MDLobj.save()
         return MDLobj.balance

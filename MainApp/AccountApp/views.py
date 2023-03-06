@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from .Controllers import ProfileController
 from django.db.models import ForeignKey
 from django.db.models import ManyToOneRel
+from functools import reduce
 
 from .models import Ledger, userLedger1, userLedger2, userLedger3, AppLedger, UserProfile
 #Custome Built Serializers
@@ -19,6 +20,7 @@ from .serializers import (
                         ,CreateLedgerSerializer
                         ,Ledger_Serializer
                         ,userLedgers_Serializer
+                        ,testing
                         #,FullLedgerSerializer
                         )
 
@@ -47,38 +49,52 @@ from rest_framework.response import Response
 
 import json
 
-
-
 """
 ********************************
 ALL GET REQUESTS
 ********************************
 """
 
+"""ALL LEDGERS"""
+
+#Get all userLedger objects
+class getAll_userLedgers(APIView):
+    def get(self, request, format= None):
+        allLedgers = getAppLedgers()
+        allLedger = list(map(lambda curr_ledger: list(curr_ledger.objects.all()),allLedgers))  
+        merge = reduce(lambda accum, iterable: accum+iterable, allLedger)
+        serializer = userLedgers_Serializer(merge, many=True,fields=('date', 'debit', 'credit', 'balance', 'user', 'ledger', 'userName'))
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+
 """LEDGER"""
 #get Main Ledger
-class getLedger(APIView):
-
+class getLedgerby_id(APIView):
     def get(self, request , id , format=None):
         data = get_SpecificLedgerID_by(MDL=Ledger, field="id", value=id)
         serializer = Ledger_Serializer(data)
         return Response(serializer.data)
 
 #Get Ledger Objs by User Name
-class getUser_Ledgers(APIView):
+class getLedgersby_Name(APIView):
     @NameQuery_Decorator
     def get(self, request, string, format= None):
         return string
 
-#Get all userLedger objects
-class getAll_userLedgers(APIView):
-    def get(self, request, format= None):
-        allData = getAppLedgers()
-        print(f'ALL DATA {allData}')
-        # genericSerializer = self.serialize_class(data = allData)
-        return Response(userLedgers_Serializer(allData, many=True).data, status=status.HTTP_200_OK)
-
-
+"""SUBCLASS LEDGERS"""
+#get through a search of subLedgers by id
+class getUserLedgersby_id(APIView):
+    serializer_class = userLedgers_Serializer
+    def get(self, request):
+        userLedger1.objects.get(id=22)
+        serializer = self.serializer_class(model_class=userLedger1, data = request.data, fields=('amount','description','date' ))
+        if serializer.is_valid():
+            serializer.save()
+            print("it did save")
+        else:
+            print("not Valid")
+        return Response(status=status.HTTP_202_ACCEPTED)
+        
 #Create a Ledger Object         
 class createLedger(APIView):
     serializer_class = CreateLedgerSerializer
@@ -90,17 +106,20 @@ class createLedger(APIView):
         #     serializer.save()
         return Response( Ledger_Serializer(Ledger.objects.all(),many=True).data, status=status.HTTP_202_ACCEPTED)
 
+#in progress for a post
 class inProgress(APIView):
     serializer_class = userLedgers_Serializer
     def post(self, request):
         userLedger1.objects.get(id=22)
-        serializer = self.serializer_class(model_class=userLedger1, data = request.data)
+        serializer = self.serializer_class(model_class=userLedger1, data = request.data, fields=('amount','description','date' ))
         if serializer.is_valid():
             serializer.save()
             print("it did save")
         else:
             print("not Valid")
         return Response(status=status.HTTP_202_ACCEPTED)
+
+
 """
 ********************************
     ALL DELETE REQUESTS
@@ -203,9 +222,6 @@ ALL CREATE REQUESTS
 ALL UPDATE REQUESTS
 ********************************
 """
-
-
-
 
 def delALLappledger(request):
     AppLedger.__subclasses__()
@@ -316,8 +332,6 @@ class UserLedgerPOST(APIView):
         description = serializer.data.get('description')
         user = serializer.data.get('userName')
         rate = serializer.data.get('rate')
-
-            
                 
         #Main Ledger Instance
         tempLedger = Ledger(date=date, debit=amount, description=description) if amount > 0 else Ledger(date=date, credit=amount, description=description)  
