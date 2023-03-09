@@ -8,32 +8,19 @@ import {
     Route,
     Redirect,
 } from 'react-router-dom'
+import { DesktopOutlined, PieChartOutlined, UserOutlined, TeamOutlined, FileOutlined } from '@ant-design/icons';
+import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import { useState } from 'react';
+const { Header, Content, Footer, Sider } = Layout;
 
 
-const LandingPage = (props) => {
-
-    return (
-        <div>
-        <h1> Home: Landing PageDarel</h1>
-        <button onClick={props.api}>API</button>
-        
-        DATA:
-    
-        </div>
-    )
-}
 
 const Homepage = (props) =>{
 
     return (
-       <Router>
-            <Routes>
-                <Route  path="create" element={<EntryForm/>}/>
-                <Route  path="" element={<LandingPage api={props.apiCall} data={props.info}/>}/>
-                <Route  path="profile" element={<ProfilePage />}/>   
-            </Routes>
-        </Router>
-        )
+        
+       <div><p>Hello</p></div>
+    )
     }
 
 export default Homepage;

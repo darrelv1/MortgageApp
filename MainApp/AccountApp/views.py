@@ -68,7 +68,7 @@ class getAll_userLedgers(APIView):
 
 
 """LEDGER"""
-#get Main Ledger
+#get Main Ledger by id
 class getLedgerby_id(APIView):
     def get(self, request , id , format=None):
         data = get_SpecificLedgerID_by(MDL=Ledger, field="id", value=id)
@@ -80,6 +80,14 @@ class getLedgersby_Name(APIView):
     @NameQuery_Decorator
     def get(self, request, string, format= None):
         return string
+    
+class getLedgerAll(APIView): 
+    def get(self, request): 
+        data = Ledger.objects.all()
+        print(data)
+        Ledger_All = Ledger_Serializer(data, many=True)
+        return Response(Ledger_All.data, status=status.HTTP_200_OK)
+
 
 """SUBCLASS LEDGERS"""
 #get through a search of subLedgers by id
@@ -94,6 +102,15 @@ class getUserLedgersby_id(APIView):
         else:
             print("not Valid")
         return Response(status=status.HTTP_202_ACCEPTED)
+    
+"""USERPROFILES"""
+
+class getUserProfilesby_Name(APIView):
+    def get(self, request,  ):
+        usersNames = UserProfile.objects.values_list("name", flat=True)
+        print(usersNames)
+        return Response(list(usersNames),status=200)
+
         
 #Create a Ledger Object         
 class createLedger(APIView):
@@ -540,7 +557,7 @@ def tester2(request):
 
 
 def tester(request):
-    ledger = Ledger.objects.get(id=135)
+    ledger = Ledger.objects.get(id=109)
     print(ledger._meta.related_objects)
     INSuserledger1 = ledger.userledger1.all()
     INSuserledger2 = ledger.userledger2.all()   

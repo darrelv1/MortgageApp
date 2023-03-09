@@ -21,9 +21,11 @@ from .views import (
                    delete_split1,
                    delete_split2,
                    delete_split3,
+                   getLedgerAll,
                    getLedgerby_id,
                    getLedgersby_Name,
                    getAll_userLedgers,
+                   getUserProfilesby_Name,
                    createLedger,
                    inProgress,
             
@@ -57,12 +59,13 @@ urlpatterns = [
     path('split/', entrySplit.as_view()),
 
     path('qwerty/', createLedger.as_view()),
-    path('inProgress/', inProgress.as_view()),
+    path('inProgress/', tester),
     
+    path('getLedgerAll', getLedgerAll.as_view()),
     path('getLedger/<str:id>', getLedgerby_id.as_view()),
     path('getLedgerByName/<str:string>', getLedgersby_Name.as_view()),
     path('getAllul', getAll_userLedgers.as_view()),
-    
+    path('getUserNames',getUserProfilesby_Name.as_view()) 
 ]
 
 

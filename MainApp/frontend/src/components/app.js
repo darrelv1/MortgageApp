@@ -2,6 +2,8 @@ import React, { Component, useState } from "react";
 import { render } from "react-dom"
 import Homepage from "./Homepage"
 import {axios} from "axios"
+import LayoutComponent from "./Layout"
+import { BrowserRouter } from "react-router-dom";
 
 let data;
 
@@ -21,19 +23,18 @@ const sampleAPIcall = (event) => {
 }
 
 
+
+
+
 const App = () => {
 
    
     return (
-        <div>
-            <Homepage
-                apiCall = {sampleAPIcall}
-                info ={data}
-            >
-            
-            </Homepage> 
-        
-        </div>
+        <BrowserRouter>
+    <LayoutComponent>        
+   
+    </LayoutComponent>
+    </BrowserRouter>
     );
   }
 

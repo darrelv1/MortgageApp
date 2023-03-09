@@ -26,7 +26,7 @@ const EntryForm = (props) => {
  
     const handleSubmit = (event) => {
        console.log("Submit Triggers")
-       event.preventDefault();
+       event.preventDefault(); 
  
     // let entryLine = {
     //       "date" : date,

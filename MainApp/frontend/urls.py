@@ -6,7 +6,8 @@ urlpatterns = [
     path('', index), 
     path('join/', index),
     path('create/', index),
-    path('profile/',index)
+    path('profile/',index),
+    path('AllUsers/', index)
 ]
 
  
